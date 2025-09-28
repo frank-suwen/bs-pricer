@@ -1,0 +1,1 @@
+// Warmup loop; time N evaluations; report mean and p50. (Stage-1 is about correctness + package, not perf heroics yet.)
