@@ -1,0 +1,1 @@
+bullet plan for Stage-2 (MC), Stage-3 (variance reduction + SIMD/AVX).

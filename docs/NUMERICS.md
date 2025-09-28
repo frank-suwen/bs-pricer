@@ -1,0 +1,1 @@
+the exact formulas used; references; notes on stability/tolerances.

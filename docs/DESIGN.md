@@ -1,0 +1,1 @@
+why the API looks this way, units, error handling choices.
