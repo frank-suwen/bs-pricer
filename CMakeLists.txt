@@ -15,7 +15,7 @@ add_library(bs STATIC
 )
 
 target_include_directories(bs PUBLIC
-    $<BUILD_INTERFACE:$P{CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
