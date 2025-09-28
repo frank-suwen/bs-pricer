@@ -1,0 +1,1 @@
+// Check signs and magnitudes vs. known outputs; finite-difference sanity checks (small ε)

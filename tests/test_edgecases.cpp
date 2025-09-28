@@ -1,0 +1,1 @@
+// T→0, σ→small, deep ITM/OTM -- ensure no NaNs, and behavior is reasonable.
