@@ -12,6 +12,7 @@ add_library(bs STATIC
     src/pricing.cpp
     src/greeks.cpp
     src/math.cpp
+    src/params.cpp
 )
 
 target_include_directories(bs PUBLIC
