@@ -9,4 +9,5 @@ target_link_libraries(bs_tests PRIVATE
   Catch2::Catch2WithMain
 )
 
-add_test(NAME bs_tests COMMAND bs_tests)
+include(Catch)
+catch_discover_tests(bs_tests)
