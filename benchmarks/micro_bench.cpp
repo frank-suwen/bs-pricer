@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include "bs/bs.hpp"
 
-using my_clock_t = std::chrono::steady_clock;
+using steady_clock_t = std::chrono::steady_clock;
 
 static double parse_or(const char* s, double d) { try { return s ? std::stod(s) : d; } catch (...) { return d; } }
 static long parse_or_long(const char* s, long d) { try { return s ? std::stol(s) : d; } catch (...) { return d; } }
@@ -42,11 +42,11 @@ int main(int argc, char** argv) {
     }
 
     // Timed section
-    auto t0 = my_clock_t::now();
+    auto t0 = steady_clock_t::now();
     for (long i = 0; i < iters; i++) {
         sink = sink + (type == "call" ? bs::price_call(p) : bs::price_put(p));
     }
-    auto t1 = my_clock_t::now();
+    auto t1 = steady_clock_t::now();
 
     const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
     const double ns_per_eval = static_cast<double>(ns) / static_cast<double>(iters);
