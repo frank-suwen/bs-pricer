@@ -29,6 +29,10 @@ target_compile_options(bs PRIVATE
 add_executable(bs_cli apps/bs_cli.cpp)
 target_link_libraries(bs_cli PRIVATE bs)
 
+# Micro Benchmark
+add_executable(bs_bench benchmarks/micro_bench.cpp)
+target_link_libraries(bs_bench PRIVATE bs)
+
 # Dependencies for tests
 include(cmake/deps.cmake)
 
