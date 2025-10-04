@@ -34,7 +34,7 @@ Built in **Release** on an Azure Standard B1s (1 vCPU, 1 GiB), gcc (Ubuntu 11.x)
 
 `./build/bs_bench --type call --iters 300000`
 
-$Time: 10.34 ms \space | \space ns/eval: 34.47 \space | \space evals/s: ~28.0M$
+$Time: 10.34 ms \space | \space ns/eval: 34.47 \space | \space evals/s: ~29.0M$
 
 `./build/bs_bench --type put --iters 300000`
 
