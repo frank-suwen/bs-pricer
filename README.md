@@ -29,6 +29,21 @@ see `docs/NUMERICS.md` for formulas, units, and tolerances. Summary:
 # Why C++20?
 Feature richness (e.g., `constexpr`, library polish) with excellent toolchain maturity on Ubuntu 22.04 CI.
 
+# Benchmark
+Built in **Release** on an Azure Standard B1s (1 vCPU, 1 GiB), gcc (Ubuntu 11.x), CMake Ninja.
+
+`./build/bs_bench --type call --iters 300000`
+
+$Time: 10.34 ms \space | \space ns/eval: 34.47 \space | \space evals/s: ~28.0M$
+
+`./build/bs_bench --type put --iters 300000`
+
+$Time: 10.64 ms \space | \space ns/eval: 35.45 \space | \space evals/s: ~28.2M$
+
+Numbers vary with hardware/load; CI **builds** the bench but does not **run** it.
+
+
+
 # Roadmap
 * Stage-2: Monte Carlo engine + variance reduction
 * Stage-3: SIMD/AVX + cache-aware layouts + microbenchmarks
