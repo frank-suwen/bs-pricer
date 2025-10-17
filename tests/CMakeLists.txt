@@ -2,6 +2,7 @@ add_executable(bs_tests
   test_pricing.cpp
   test_greeks.cpp
   test_edgecases.cpp
+  test_concepts.cpp
 )
 
 target_link_libraries(bs_tests PRIVATE

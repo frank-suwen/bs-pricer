@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BS_BUILD_TESTS "Build tests" ON)
 
+include(CTest)
+
 # library (empty sources for now are OK)
 add_library(bs STATIC
     src/pricing.cpp
@@ -22,7 +24,7 @@ target_include_directories(bs PUBLIC
 
 target_compile_features(bs PUBLIC cxx_std_20)
 target_compile_options(bs PRIVATE
-    $<$<CXX_COMPILER_ID:GNU,Clang,APPleClang>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic>
 )
 
 # CLI
