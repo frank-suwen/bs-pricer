@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "bs/numeric_utils.hpp"
 
 using steady_clock_t = std::chrono::steady_clock;
 
@@ -78,11 +79,25 @@ int main(int argc, char **argv) {
   const double ns_per_eval = static_cast<double>(ns) / static_cast<double>(iters);
   const double evals_per_sec = 1e9 / ns_per_eval;
 
+  // ---- NEW: demonstrate span-core & shims (done AFTER timing) ----
+  // Fill a small buffer with a few prices, then sum via vector shim and raw* shim.
+  std::vector<double> buf;
+  buf.reserve(8);
+  for (int i = 0; i < 8; ++i) {
+    buf.push_back(type == "call" ? bs::price_call(p) : bs::price_put(p));
+  }
+  // vector shim (double-only public surface)
+  const double checksum_vec = bs::accumulate_sum(buf);
+  // raw-pointer + size shim (shows zero-copy view explicitly)
+  const double checksum_ptr = bs::accumulate_sum(buf.data(), buf.size());
+  // sanity: they should match exactly for identical inputs
+  volatile double checksum = checksum_vec + checksum_ptr; // defeat DCE
+
   std::cout << "Type=" << type << " iters=" << iters << "\n";
   std::cout << "Time: " << ns / 1e6 << " ms\n";
   std::cout << "ns/eval: " << ns_per_eval << "\n";
   std::cout << "evals/s: " << evals_per_sec << "\n";
   // prevent dead-code elimination:
-  std::cout << "sink=" << sink << "\n";
+  std::cout << "sink=" << sink << " checksum=" << checksum << "\n";
   return 0;
 }
