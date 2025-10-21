@@ -15,6 +15,7 @@ add_library(bs STATIC
     src/greeks.cpp
     src/math.cpp
     src/params.cpp
+    src/batch.cpp
 )
 
 target_include_directories(bs PUBLIC

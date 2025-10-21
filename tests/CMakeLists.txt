@@ -4,6 +4,7 @@ add_executable(bs_tests
   test_edgecases.cpp
   test_concepts.cpp
   test_numeric_utils.cpp
+  test_batch_demo.cpp
 )
 
 target_link_libraries(bs_tests PRIVATE
