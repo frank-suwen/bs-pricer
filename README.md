@@ -20,6 +20,11 @@ ctest --test-dir build --output-on-failure
 * `Params{S,K,r,sigma,T}` with `validate()`
 * `norm_pdf`, `norm_cdf` helpers
 
+# Internals
+* Core numerics accept `std::span<const T>` (zero copy) with a tiny `Arithmetic` concept for safe templating.
+* Public API remains `double` for stability; span-core is used in enchmarks and internal batch helpers (`bs::detail::mean_price_call/put`).
+* This prepares the Monte Carlo engine (Stage-2) and SMID (Stage-3) without API churn. 
+
 # Numerics
 see `docs/NUMERICS.md` for formulas, units, and tolerances. Summary:
 - $C = S N(d_1) - K e^{-rT} N(d_2), \quad P = K e^{-rT} N(-d_2) - S N(-d_1)$
