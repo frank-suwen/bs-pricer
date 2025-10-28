@@ -19,7 +19,7 @@ public:
     struct dealloc_event {
         std::size_t size;
         std::size_t alignment;
-        void*.      ptr;  // pointer passed to deallocate
+        void*       ptr;  // pointer passed to deallocate
     };
 
     explicit logging_resource(std::pmr::memory_resource* upstream = std::pmr::get_default_resource()) : upstream_(upstream) {
@@ -70,6 +70,6 @@ private:
     std::pmr::memory_resource* upstream_;
     std::vector<alloc_event>   allocs_;
     std::vector<dealloc_event> deallocs_;
-}
+};
 
 } // namespace test_pmr
