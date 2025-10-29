@@ -24,6 +24,8 @@ ctest --test-dir build --output-on-failure
 * Core numerics accept `std::span<const T>` (zero copy) with a tiny `Arithmetic` concept for safe templating.
 * Public API remains `double` for stability; span-core is used in enchmarks and internal batch helpers (`bs::detail::mean_price_call/put`).
 * This prepares the Monte Carlo engine (Stage-2) and SMID (Stage-3) without API churn. 
+* **PMR demo:** A `pmr::monotonic_buffer_resource` micro-test allocates a `pmr::vector<double>` from a fixed stack buffer and asserts the spill-over to an upstream logging resource. This documents allocation sites portably (size/alignment checks).
+
 
 # Numerics
 see `docs/NUMERICS.md` for formulas, units, and tolerances. Summary:
