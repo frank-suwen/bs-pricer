@@ -48,12 +48,23 @@ TEST_CASE("pmr::monotonic_buffer_resource: in-buffer vs upstream allocations", "
     // 3) Third allocation: reserve 32 doubles (256 bytes) -> exceeds local buffer, must go upstream
     v.reserve(32);
     REQUIRE(!logger.allocs().empty());
-    // Expect the first upstream allocation to be for 256 bytes with alignment of double
-    const auto& e = logger.allocs().front();
-    REQUIRE(e.size == bytes_32);
-    REQUIRE(e.alignment == alignof(double));
 
-    // Optional: sanity that pushes now use the already-allocated capacity (no new upstream alloc)
+    const auto& e = logger.allocs().front();
+
+    // We cannot reply on exact byte size across libstdc++/libc++/MSVC.
+    // Assert minimal guarantees instead:
+    REQUIRE(e.size >= bytes_32);                 // at least what 32 doubles need
+    REQUIRE((e.size % alignof(double)) == 0);    // size is compatible with double alignment
+    
+    // Alignment: at least double's, power-of-two, and divides size
+    REQUIRE(e.alignment >= alignof(double));
+    REQUIRE((e.alignment & (e.alignment - 1)) == 0); // power-of-two
+    REQUIRE((e.size % e.alignment) == 0);
+
+    // Optional: log for curiosity (won't fail tests)
+    INFO("first upstream alloc size=" << e.size << " alignment=" << e.alignment);
+
+    // Subsequent pushes should not allocate again upstream (capacity already there)
     const auto upstream_before = logger.allocs().size();
     for (int i = 0; i < 32; ++i) v.push_back(static_cast<double>(i));
     REQUIRE(logger.allocs().size() == upstream_before);
