@@ -42,3 +42,14 @@
 
 # generated artifacts
 build/
+
+# ===== perf profiling artifacts =====
+perf.data
+perf.data.old
+
+# perf build directory
+build-perf/
+
+# perf intermediate outputs (keep flamegraph svg)
+perf_out/*.script
+perf_out/*.folded
