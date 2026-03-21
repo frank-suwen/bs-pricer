@@ -7,6 +7,7 @@ add_executable(bs_tests
   test_batch_demo.cpp
   test_pmr_mbr.cpp
   test_ranges_ladder.cpp
+  test_mc_plain.cpp
 )
 
 target_link_libraries(bs_tests PRIVATE
