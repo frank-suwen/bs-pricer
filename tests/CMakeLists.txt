@@ -8,6 +8,7 @@ add_executable(bs_tests
   test_pmr_mbr.cpp
   test_ranges_ladder.cpp
   test_mc_plain.cpp
+  test_mc_antithetic.cpp
 )
 
 target_link_libraries(bs_tests PRIVATE

@@ -9,7 +9,6 @@ namespace bs {
 namespace {
     
 // Simple online mean/variance accumulator (Welford).
-// We use this so we do not need to store all path payoffs.
 struct RunningStats {
     std::uint64_t n{0};
     double mean{0.0};
@@ -30,6 +29,15 @@ struct RunningStats {
 };
 
 template <bool IsCall>
+inline double payoff_from_st(double st, double k) noexcept {
+    if constexpr (IsCall) {
+        return std::max(st - k, 0.0);
+    } else {
+        return std::max(k - st, 0.0);
+    }
+}
+
+template <bool IsCall>
 McResult mc_price_plain_impl(const Params& p, std::uint64_t paths, std::uint64_t seed) {
     if (paths == 0) {
         throw std::invalid_argument("mc_price_*_plain: paths must be > 0");
@@ -48,17 +56,54 @@ McResult mc_price_plain_impl(const Params& p, std::uint64_t paths, std::uint64_t
     for (std::uint64_t i = 0; i < paths; ++i) {
         const double z  = normal(rng);
         const double st = p.S * std::exp(drift + vol * z);
-
-        const double payoff = IsCall
-            ? std::max(st - p.K, 0.0)
-            : std::max(p.K - st, 0.0);
-        
+        const double payoff = payoff_from_st<IsCall>(st, p.K);
         stats.push(payoff);
     }
 
     McResult out;
     out.price = disc * stats.mean;
     out.stderr = disc * std::sqrt(stats.variance() / static_cast<double>(paths));
+    out.paths = paths;
+    return out;
+}
+
+template <bool IsCall>
+McResult mc_price_antithetic_impl(const Params& p, std::uint64_t paths, std::uint64_t seed) {
+    if (paths == 0) {
+        throw std::invalid_argument("mc_price_*_antithetic: paths must be > 0");
+    }
+    if ((paths % 2) != 0) {
+        throw std::invalid_argument("mc_price_*_antithetic: paths must be even");
+    }
+
+    std::mt19937_64 rng(seed);
+    std::normal_distribution<double> normal(0.0, 1.0);
+
+    const double drift = (p.r - 0.5 * p.sigma * p.sigma) * p.T;
+    const double vol   = p.sigma * std::sqrt(p.T);
+    const double disc  = std::exp(-p.r * p.T);
+
+    const std::uint64_t pairs = paths / 2;
+    
+    RunningStats stats;
+
+    for (std::uint64_t i = 0; i < pairs; ++i) {
+        const double z = normal(rng);
+
+        const double st1 = p.S * std::exp(drift + vol * z);
+        const double st2 = p.S * std::exp(drift - vol * z); // same as using -z
+
+        const double payoff1 = payoff_from_st<IsCall>(st1, p.K);
+        const double payoff2 = payoff_from_st<IsCall>(st2, p.K);
+
+        // One antithetic pair becomes one averaged observation.
+        const double paired_payoff = 0.5 * (payoff1 + payoff2);
+        stats.push(paired_payoff);
+    }
+
+    McResult out;
+    out.price = disc * stats.mean;
+    out.stderr = disc * std::sqrt(stats.variance() / static_cast<double>(pairs));
     out.paths = paths;
     return out;
 }
@@ -71,6 +116,14 @@ McResult mc_price_call_plain(const Params& p, std::uint64_t paths, std::uint64_t
 
 McResult mc_price_put_plain(const Params& p, std::uint64_t paths, std::uint64_t seed) {
     return mc_price_plain_impl<false>(p, paths, seed);
+}
+
+McResult mc_price_call_antithetic(const Params& p, std::uint64_t paths, std::uint64_t seed) {
+    return mc_price_antithetic_impl<true>(p, paths, seed);
+}
+
+McResult mc_price_put_antithetic(const Params& p, std::uint64_t paths, std::uint64_t seed) {
+    return mc_price_antithetic_impl<false>(p, paths, seed);
 }
 
 } // namespace bs

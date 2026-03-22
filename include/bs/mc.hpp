@@ -14,4 +14,7 @@ struct McResult {
 McResult mc_price_call_plain(const Params& p, std::uint64_t paths, std::uint64_t seed);
 McResult mc_price_put_plain(const Params& p, std::uint64_t paths, std::uint64_t seed);
 
+McResult mc_price_call_antithetic(const Params& p, std::uint64_t paths, std::uint64_t seed);
+McResult mc_price_put_antithetic(const Params& p, std::uint64_t paths, std::uint64_t seed);
+
 } // namespace bs
