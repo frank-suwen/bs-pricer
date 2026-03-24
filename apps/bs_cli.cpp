@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
         return 2;
       }
     } else if (a == "--seed") {
-      if (!parse_u64(args, i, paths)) {
+      if (!parse_u64(args, i, seed)) {
         print_usage(argv[0]);
         return 2;
       }
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     
     std::cout << "Price: " << price << "\n"
               << "Delta: " << g.delta << "\n"
-              << "Gemma: " << g.gamma << "\n"
+              << "Gamma: " << g.gamma << "\n"
               << "Vega : " << g.vega << "  (per 1.0 sigma; per 1% = vega/100)\n"
               << "Theta: " << g.theta << "  (per year; per day ≈ theta/365)\n"
               << "Rho  : " << g.rho << "  (per 1.0 rate)\n";
