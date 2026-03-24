@@ -1,29 +1,50 @@
-// Manual argv parsing (Stage-1, minimal):
-// read --type, --S, --K, --r, --sigma, --T.
-// On success, print price + Greeks in a neat block;
-// On bad input, return non-zero with a short usage string.
+// Manual argv parsing (Stage-1 + Stage-2):
+// Closed-form mode (default): price + Greeks
+// Monte Carlo mode (--mc): price + stderr + analytic comparison
 #include <cstdlib>
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "bs/bs.hpp" // pulls in params, pricing, greeks
+#include "bs/bs.hpp" // pulls in params, pricing, greeks, mc
 
 namespace {
 
 void print_usage(const char *prog) {
-  std::cerr << "Usage:\n  " << prog << " -- type {call|put}"
-            << " -- S <spot> --K <strike> --r <rate> --sgima <vol> --T <years>\n"
-            << "Example:\n  " << prog
-            << " --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n";
+  std::cerr 
+      << "Usage:\n"
+      << "  Closed-form (default):\n"
+      << "    " << prog 
+      << " --type {call|put} --S <spot> --K <strike> --r <rate> --sigma <vol> --T <years>\n\n"
+      << "  Monte Carlo:\n"
+      << "    " << prog
+      << " --mc [--antithetic] --type {call|put} --paths <N> --seed <S>"
+      << " -- S <spot> --K <strike> --r <rate> --sigma <vol> --T <years>\n\n"
+      << "Example:\n" 
+      << "  " << prog
+      << " --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n"
+      << "  " << prog
+      << " --mc --type call --paths 200000 --sed 42 -S 100 --K 100 --r 0.05 --sigma 0.02 --T 1\n"
+      << "  " << prog
+      << " --mc --antithetic --type put --paths 200000 --seed 42 --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n";
 }
 
 bool parse_double(const std::vector<std::string> &args, size_t &i, double &out) {
-  if (i + 1 >= args.size())
-    return false;
+  if (i + 1 >= args.size()) return false;
   try {
     out = std::stod(args[++i]);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+bool parse_u64(const std::vector<std::string>& args, size_t& i, std::uint64_t& out) {
+  if (i + 1 >= args.size()) return false;
+  try {
+    out = static_cast<std::uint64_t>(std::stoull(args[++i]));
   } catch (...) {
     return false;
   }
@@ -37,8 +58,15 @@ int main(int argc, char **argv) {
 
   std::string type;
   bs::Params p{};
+
+  bool use_mc = false;
+  bool use_antithetic = false;
+  std::uint64_t paths = 100000;
+  std::uint64_t seed = 42;
+
   for (size_t i = 0; i < args.size(); ++i) {
     const std::string &a = args[i];
+
     if (a == "--type") {
       if (i + 1 >= args.size()) {
         print_usage(argv[0]);
@@ -70,6 +98,20 @@ int main(int argc, char **argv) {
         print_usage(argv[0]);
         return 2;
       }
+    } else if (a == "--mc") {
+      use_mc = true;
+    } else if (a == "--antithetic") {
+      use_antithetic = true;
+    } else if (a == "--paths") {
+      if (!parse_u64(args, i, paths)) {
+        print_usage(argv[0]);
+        return 2;
+      }
+    } else if (a == "--seed") {
+      if (!parse_u64(args, i, paths)) {
+        print_usage(argv[0]);
+        return 2;
+      }
     } else if (a == "--help" || a == "-h") {
       print_usage(argv[0]);
       return 0;
@@ -85,38 +127,83 @@ int main(int argc, char **argv) {
     print_usage(argv[0]);
     return 2;
   }
+
   std::string why;
   if (!p.validate(&why)) {
     std::cerr << "Invalid params: " << why << "\n";
     return 2;
   }
 
-  std::cout.setf(std::ios::fixed);
-  std::cout << std::setprecision(6);
-
-  double price = 0.0;
-  bs::Greeks g{};
-  if (type == "call") {
-    price = bs::price_call(p);
-    g = bs::greeks_call(p);
-  } else if (type == "put") {
-    price = bs::price_put(p);
-    g = bs::greeks_put(p);
-  } else {
+  if (type != "call" && type != "put") {
     std::cerr << "Unknown option type: " << type << " (use call|put)\n";
     return 2;
   }
 
-  std::cout << "Type: " << type << "\n"
-            << "S=" << p.S << ", K=" << p.K << ", r=" << p.r << ", sigma=" << p.sigma
-            << ", T=" << p.T << "\n\n";
+  std::cout.setf(std::ios::fixed);
+  std::cout << std::setprecision(6);
 
-  std::cout << "Price: " << price << "\n"
-            << "Delta: " << g.delta << "\n"
-            << "Gamma: " << g.gamma << "\n"
-            << "Vega : " << g.vega << "  (per 1.0 sigma; per 1% = vega/100)\n"
-            << "Theta: " << g.theta << "  (per year; per day ≈ theta/365)\n"
-            << "Rho  : " << g.rho << " (per 1.0 rate)\n";
+  if (!use_mc) {
+    // ---- Stage-1 behavior preserved ----
+    double price = 0.0;
+    bs::Greeks g{};
 
-  return 0;
+    if (type == "call") {
+      price = bs::price_call(p);
+      g = bs::greeks_call(p);
+    } else {
+      price = bs::price_put(p);
+      g = bs::greeks_put(p);
+    }
+
+    std::cout << "Mode : closed_form\n";
+    std::cout << "type : " << type << "\n";
+    std::cout << "S=" << p.S << ", K=" << p.K << ", r=" << p.r
+              << ", sigma=" << p.sigma << ", T=" << p.T << "\n\n";
+    
+    std::cout << "Price: " << price << "\n"
+              << "Delta: " << g.delta << "\n"
+              << "Gemma: " << g.gamma << "\n"
+              << "Vega : " << g.vega << "  (per 1.0 sigma; per 1% = vega/100)\n"
+              << "Theta: " << g.theta << "  (per year; per day ≈ theta/365)\n"
+              << "Rho  : " << g.rho << "  (per 1.0 rate)\n";
+    
+    return 0;
+  }
+
+  // ---- Stage-2 Monte Carlo mode ----
+  try {
+    bs::McResult r{};
+
+    if (type == "call") {
+      r = use_antithetic
+              ? bs::mc_price_call_antithetic(p, paths, seed)
+              : bs::mc_price_call_plain(p, paths, seed);
+    } else {
+      r = use_antithetic
+              ? bs::mc_price_put_antithetic(p, paths, seed)
+              : bs::mc_price_put_antithetic(p, paths, seed);
+    }
+
+    const double analytic = (type == "call")
+                                ? bs::price_call(p)
+                                : bs::price_put(p);
+
+    std::cout << "Mode    : mc\n";
+    std::cout << "Variant : " << (use_antithetic ? "antithetic" : "plain") << "\n";
+    std::cout << "Type    : " << type << "\n";
+    std::cout << "S=" << p.S << ", K=" << p.K << ", r=" << p.r
+              << ", sigma=" << p.sigma << ", T=" << p.T << "\n";
+    std::cout << "Paths   : " << r.paths << "\n";
+    std::cout << "Seed    : " << seed << "\n\n";
+
+    std::cout << "MC Price : " << r.price << "\n";
+    std::cout << "StdErr   : " << r.stderr << "\n";
+    std::cout << "Analytic : " << analytic << "\n";
+    std::cout << "Abs Error: " << std::abs(r.price - analytic) << "\n";
+
+    return 0;
+  } catch (const std::exception& e) {
+    std::cerr << "Monte Carlo error: " << e.what() << "\n";
+    return 1;
+  }
 }
