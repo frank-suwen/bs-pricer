@@ -17,18 +17,18 @@ void print_usage(const char *prog) {
       << "Usage:\n"
       << "  Closed-form (default):\n"
       << "    " << prog 
-      << " --type {call|put} --S <spot> --K <strike> --r <rate> --sigma <vol> --T <years>\n\n"
+      << " --Type {call|put} --S <spot> --K <strike> --r <rate> --sigma <vol> --T <years>\n\n"
       << "  Monte Carlo:\n"
       << "    " << prog
-      << " --mc [--antithetic] --type {call|put} --paths <N> --seed <S>"
+      << " --mc [--antithetic] --Type {call|put} --paths <N> --seed <S>"
       << " -- S <spot> --K <strike> --r <rate> --sigma <vol> --T <years>\n\n"
       << "Example:\n" 
       << "  " << prog
-      << " --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n"
+      << " --Type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n"
       << "  " << prog
-      << " --mc --type call --paths 200000 --sed 42 -S 100 --K 100 --r 0.05 --sigma 0.02 --T 1\n"
+      << " --mc --Type call --paths 200000 --sed 42 -S 100 --K 100 --r 0.05 --sigma 0.02 --T 1\n"
       << "  " << prog
-      << " --mc --antithetic --type put --paths 200000 --seed 42 --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n";
+      << " --mc --antithetic --Type put --paths 200000 --seed 42 --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1\n";
 }
 
 bool parse_double(const std::vector<std::string> &args, size_t &i, double &out) {
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
   for (size_t i = 0; i < args.size(); ++i) {
     const std::string &a = args[i];
 
-    if (a == "--type") {
+    if (a == "--Type") {
       if (i + 1 >= args.size()) {
         print_usage(argv[0]);
         return 2;
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
   }
 
   if (type.empty()) {
-    std::cerr << "--type is required\n";
+    std::cerr << "--Type is required\n";
     print_usage(argv[0]);
     return 2;
   }
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
   }
 
   if (type != "call" && type != "put") {
-    std::cerr << "Unknown option type: " << type << " (use call|put)\n";
+    std::cerr << "Unknown option Type: " << type << " (use call|put)\n";
     return 2;
   }
 
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
     }
 
     std::cout << "Mode : closed_form\n";
-    std::cout << "type : " << type << "\n";
+    std::cout << "Type : " << type << "\n";
     std::cout << "S=" << p.S << ", K=" << p.K << ", r=" << p.r
               << ", sigma=" << p.sigma << ", T=" << p.T << "\n\n";
     
