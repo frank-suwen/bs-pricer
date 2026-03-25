@@ -49,7 +49,45 @@ $Time: 10.64 ms \space | \space ns/eval: 35.45 \space | \space evals/s: ~28.2M$
 
 Numbers vary with hardware/load; CI **builds** the bench but does not **run** it.
 
+# Monte Carlo
+This project implements Monte Carlo simulation for option pricing under the Black-Scholes model in the Stage-2.
 
+**Methods**
+* **Plain Monte Carlo**
+* **Antithetic Variates** (variance reducation)
+
+The terminal prices is simulated as:
+```
+ST = S * exp((r - 0.5 * sigma^2) * T + sigma * sqrt(T) * Z)
+```
+with Z ~ N(0, 1).
+
+
+**Examples (S=100, K=100, r=0.05, sigma=0.2, T=1)**
+```
+ Method          | Paths | Price   | StdErr | Analytic | Abs Error |
+ ---------------   -----   -------   ------   --------   ---------
+ Closed-form     | N/A   | 10.4506 | N/A    | N/A      | N/A       |
+ MC (plain)      | 200K  | 10.5167 | 0.0331 | 10.4506  | 0.0661    |
+ MC (antithetic) | 200K  | 10.4634 | 0.0233 | 10.4506  | 0.0128    |
+```
+
+**Observations**
+* Antithetic variates reduce variance by ~30%
+* Convergence improves significantly vs plain MC
+* Results match analytic Black-Scholes pricing closely
+
+**CLI Usage**
+```Bash
+# Closed-form
+./build/bs_cli --type call --S 100 --K 100 -r 0.05 --sigma 0.2 --T 1
+
+# Plain MC
+./build/bs_cli --mc -- type call --paths 200000 --seed 42 ...
+
+# Antithetic MC
+./build/bs_cli --mc --antithetic --type call --paths 200000 --seed 42 ...
+```
 
 # Roadmap
 * Stage-2: Monte Carlo engine + variance reduction
